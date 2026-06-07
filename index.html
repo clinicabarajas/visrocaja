@@ -3,25 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visor de Caja</title>
+    <title>Visor de Caja Directo</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 15px; background-color: #f0f2f5; margin: 0; }
         .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         h2 { text-align: center; color: #1a1a1a; margin-top: 0; }
         .selector-fecha { text-align: center; margin-bottom: 25px; }
         input[type="date"] { padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; width: 80%; max-width: 250px; }
-        
-        /* Estilos de las secciones */
         .seccion-titulo { background-color: #007bff; color: white; padding: 10px; border-radius: 6px; font-size: 16px; font-weight: bold; text-align: center; margin-top: 20px; }
         .subseccion-titulo { color: #333; margin: 15px 0 10px 0; border-bottom: 2px solid #f0f2f5; padding-bottom: 5px; font-size: 16px; }
-        
-        /* Grid de datos */
         .fila-dato { display: flex; justify-content: space-between; padding: 8px 5px; border-bottom: 1px solid #f9f9f9; font-size: 15px; }
         .fila-dato:last-child { border-bottom: none; }
         .etiqueta { color: #666; }
         .valor { font-weight: 600; color: #222; }
-        
-        /* Total Destacado */
         .fila-total { display: flex; justify-content: space-between; padding: 10px 5px; background-color: #eec; font-weight: bold; border-radius: 6px; margin-top: 8px; font-size: 16px; color: #155724; }
     </style>
 </head>
@@ -35,71 +29,72 @@
             <input type="date" id="fecha">
         </div>
 
-        <!-- SECCIÓN: FACTURACIÓN DEL DÍA -->
         <div class="seccion-titulo">FACTURACIÓN DEL DÍA</div>
-        
-        <!-- SUBSECCIÓN: DR. BARAJAS -->
         <h3 class="subseccion-titulo">Dr. Barajas</h3>
         
-        <div class="fila-dato"><span class="etiqueta">Privado:</span> <span class="valor" id="b-privado">0,00 €</span></div>
-        <div class="fila-dato"><span class="etiqueta">Adeslas:</span> <span class="valor" id="b-adeslas">0,00 €</span></div>
-        <div class="fila-dato"><span class="etiqueta">Caser:</span> <span class="valor" id="b-caser">0,00 €</span></div>
-        <div class="fila-dato"><span class="etiqueta">DKV:</span> <span class="valor" id="b-dkv">0,00 €</span></div>
-        <div class="fila-dato"><span class="etiqueta">HNA:</span> <span class="valor" id="b-hna">0,00 €</span></div>
-        <div class="fila-dato"><span class="etiqueta">FDB:</span> <span class="valor" id="b-fdb">0,00 €</span></div>
-        <div class="fila-dato"><span class="etiqueta">Otros:</span> <span class="valor" id="b-otros">0,00 €</span></div>
+        <div class="fila-dato"><span class="etiqueta">Privado:</span> <span class="valor" id="b-privado">-</span></div>
+        <div class="fila-dato"><span class="etiqueta">Adeslas:</span> <span class="valor" id="b-adeslas">-</span></div>
+        <div class="fila-dato"><span class="etiqueta">Caser:</span> <span class="valor" id="b-caser">-</span></div>
+        <div class="fila-dato"><span class="etiqueta">DKV:</span> <span class="valor" id="b-dkv">-</span></div>
+        <div class="fila-dato"><span class="etiqueta">HNA:</span> <span class="valor" id="b-hna">-</span></div>
+        <div class="fila-dato"><span class="etiqueta">FDB:</span> <span class="valor" id="b-fdb">-</span></div>
+        <div class="fila-dato"><span class="etiqueta">Otros:</span> <span class="valor" id="b-otros">-</span></div>
         
-        <div class="fila-total"><span class="etiqueta-total">TOTAL DR. BARAJAS:</span> <span class="valor-total" id="b-total">0,00 €</span></div>
-
+        <div class="fila-total"><span class="etiqueta-total">TOTAL DR. BARAJAS:</span> <span class="valor-total" id="b-total">-</span></div>
     </div>
 
     <script>
-        // Pega aquí el enlace CSV que obtuviste al "Publicar en la Web" la pestaña BASECAJA
-        const URL_CSV = "TU_ENLACE_DE_GOOGLE_SHEETS_AQUÍ";
+        // PEGA AQUÍ LA URL DE LA APLICACIÓN WEB QUE COPIASTE EN APPS SCRIPT
+        const URL_CONEXION_DIRECTA = "TU_URL_DE_APPS_SCRIPT_AQUÍ";
 
         document.getElementById('fecha').addEventListener('change', async (e) => {
             const fechaSeleccionada = e.target.value; 
             if (!fechaSeleccionada) return;
 
-            // Conversión de formato de fecha YYYY-MM-DD a DD/MM/YYYY (común en Sheets)
-            const partes = fechaSeleccionada.split('-');
-            const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`; 
+            // Ponemos un mensaje de carga provisional
+            ponerCargando();
 
             try {
-                const respuesta = await fetch(URL_CSV);
-                const textoRudo = await respuesta.text();
+                // Hacemos la consulta directa a Google Sheets pasando la fecha
+                const respuesta = await fetch(`${URL_CONEXION_DIRECTA}?fecha=${fechaSeleccionada}`);
+                const datos = await respuesta.json();
 
-                // Separamos por punto y coma (;) que suele ser el estándar de Google Sheets en español
-                // Si notas que no carga, puedes cambiar el ';' por ','
-                const filas = textoRudo.split('\n').map(linea => linea.split(';'));
-
-                // Buscamos la fila donde la columna A (índice 0) coincida con la fecha
-                const filaEncontrada = filas.find(fila => fila[0].trim() === fechaFormateada.trim());
-
-                if (filaEncontrada) {
-                    // Mapeo exacto de tus columnas (Fórmula índice - 1)
-                    document.getElementById('b-privado').innerText = filaEncontrada[4] || "0,00 €";
-                    document.getElementById('b-adeslas').innerText = filaEncontrada[5] || "0,00 €";
-                    document.getElementById('b-caser').innerText   = filaEncontrada[6] || "0,00 €";
-                    document.getElementById('b-dkv').innerText     = filaEncontrada[7] || "0,00 €";
-                    document.getElementById('b-hna').innerText     = filaEncontrada[8] || "0,00 €";
-                    document.getElementById('b-fdb').innerText     = filaEncontrada[9] || "0,00 €";
-                    document.getElementById('b-otros').innerText   = filaEncontrada[10] || "0,00 €";
-                    document.getElementById('b-total').innerText   = filaEncontrada[11] || "0,00 €";
+                if (datos.exito) {
+                    // Si encuentra la fecha, pinta los datos directamente de las columnas
+                    document.getElementById('b-privado').innerText = formatearMoneda(datos.privado);
+                    document.getElementById('b-adeslas').innerText = formatearMoneda(datos.adeslas);
+                    document.getElementById('b-caser').innerText   = formatearMoneda(datos.caser);
+                    document.getElementById('b-dkv').innerText     = formatearMoneda(datos.dkv);
+                    document.getElementById('b-hna').innerText     = formatearMoneda(datos.hna);
+                    document.getElementById('b-fdb').innerText     = formatearMoneda(datos.fdb);
+                    document.getElementById('b-otros').innerText   = formatearMoneda(datos.otros);
+                    document.getElementById('b-total').innerText   = formatearMoneda(datos.total);
                 } else {
-                    // Si no encuentra la fecha, resetea los campos
-                    vaciarCampos();
+                    alert("No hay registros para esta fecha.");
+                    vaciarCampos("Sin datos");
                 }
 
             } catch (error) {
                 console.error("Error:", error);
-                alert("Error al conectar con la base de datos de Google Sheets.");
+                alert("Error al conectar directamente con Google Sheets.");
+                vaciarCampos("Error");
             }
         });
 
-        function vaciarCampos() {
+        function ponerCargando() {
+            vaciarCampos("Cargando...");
+        }
+
+        function vaciarCampos(texto) {
             const ids = ['b-privado', 'b-adeslas', 'b-caser', 'b-dkv', 'b-hna', 'b-fdb', 'b-otros', 'b-total'];
-            ids.forEach(id => document.getElementById(id).innerText = "Sin datos");
+            ids.forEach(id => document.getElementById(id).innerText = texto);
+        }
+
+        function formatearMoneda(valor) {
+            if (typeof valor === 'number') {
+                return valor.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+            }
+            return valor || "0,00 €";
         }
     </script>
 </body>
